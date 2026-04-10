@@ -1,14 +1,94 @@
-# Java
-target/
-*.class
+# ============================================
+# TruthLens - .gitignore
+# ============================================
 
-# Python
+# -------------------- Python --------------------
+venv/
+env/
+.venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.mypy_cache/
 
-# Android
+# -------------------- Java / Spring Boot --------------------
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+.mvn/
+mvnw
+mvnw.cmd
+
+# -------------------- Android --------------------
 .gradle/
 build/
+local.properties
+*.apk
+*.aab
+*.ap_
+*.dex
+captures/
+.externalNativeBuild/
+.cxx/
 
-# OS
+# -------------------- IDE --------------------
+# IntelliJ / Android Studio
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# -------------------- OS --------------------
 .DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+
+# -------------------- Models / Large Files --------------------
+# GPT-2 cached model files (downloaded at runtime)
+*.bin
+*.safetensors
+*.h5
+*.pt
+*.pth
+
+# Hugging Face cache
+.cache/
+
+# -------------------- Environment --------------------
+.env
+.env.local
+.env.production
+*.env
+
+# -------------------- Logs --------------------
+logs/
+*.log
+npm-debug.log*
+
+# -------------------- Misc --------------------
+node_modules/
+*.tmp
+*.bak
+*.orig
