@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    HOME SCREEN - activity_main.xml
+    User enters/pastes text and clicks Analyze button
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1A1A2E"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
+
+        <!-- App Logo/Title -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🔍 TruthLens"
+            android:textSize="32sp"
+            android:textColor="#E94560"
+            android:textStyle="bold"
+            android:layout_marginTop="40dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AI vs Human Text Detection"
+            android:textSize="16sp"
+            android:textColor="#8899AA"
+            android:layout_marginTop="8dp" />
+
+        <!-- Instruction -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Paste or type text below to detect if it was written by AI or a Human"
+            android:textSize="14sp"
+            android:textColor="#AABBCC"
+            android:textAlignment="center"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Text Input Area -->
+        <EditText
+            android:id="@+id/editTextInput"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:hint="Enter or paste your text here...\n\n(Minimum 50 words for accurate analysis)"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#556677"
+            android:textSize="15sp"
+            android:background="@drawable/edit_text_bg"
+            android:padding="16dp"
+            android:gravity="top|start"
+            android:inputType="textMultiLine"
+            android:scrollbars="vertical"
+            android:layout_marginTop="8dp" />
+
+        <!-- Word Counter -->
+        <TextView
+            android:id="@+id/textWordCount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="0 words"
+            android:textSize="12sp"
+            android:textColor="#556677"
+            android:textAlignment="viewEnd"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="8dp" />
+
+        <!-- Analyze Button -->
+        <Button
+            android:id="@+id/btnAnalyze"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="🔍  ANALYZE TEXT"
+            android:textSize="16sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:background="@drawable/button_bg"
+            android:layout_marginTop="24dp" />
+
+        <!-- Loading Indicator -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:visibility="gone"
+            android:indeterminateTint="#E94560" />
+
+        <TextView
+            android:id="@+id/textLoading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Analyzing text..."
+            android:textSize="14sp"
+            android:textColor="#8899AA"
+            android:layout_marginTop="8dp"
+            android:visibility="gone" />
+
+        <!-- Footer -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Powered by GPT-2 NLP Engine"
+            android:textSize="11sp"
+            android:textColor="#334455"
+            android:layout_marginTop="40dp"
+            android:layout_marginBottom="16dp" />
+
+    </LinearLayout>
+</ScrollView>

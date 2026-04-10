@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    RESULT SCREEN - activity_result.xml
+    Shows AI vs Human percentage, verdict, and explanations
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1A1A2E"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Header -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📊 Analysis Result"
+            android:textSize="26sp"
+            android:textColor="#E94560"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+        <!-- Verdict Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="20dp"
+            android:layout_marginTop="20dp">
+
+            <TextView
+                android:id="@+id/textVerdict"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Verdict"
+                android:textSize="16sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- AI Percentage -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="20dp"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🤖 AI-Generated"
+                android:textSize="14sp"
+                android:textColor="#8899AA" />
+
+            <TextView
+                android:id="@+id/textAiPercentage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0%"
+                android:textSize="36sp"
+                android:textColor="#E94560"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp" />
+
+            <ProgressBar
+                android:id="@+id/progressAi"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="12dp"
+                android:max="100"
+                android:progress="0"
+                android:progressTint="#E94560"
+                android:progressBackgroundTint="#2A2A4A"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+        <!-- Human Percentage -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="20dp"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✍️ Human-Written"
+                android:textSize="14sp"
+                android:textColor="#8899AA" />
+
+            <TextView
+                android:id="@+id/textHumanPercentage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0%"
+                android:textSize="36sp"
+                android:textColor="#0FFF50"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp" />
+
+            <ProgressBar
+                android:id="@+id/progressHuman"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="12dp"
+                android:max="100"
+                android:progress="0"
+                android:progressTint="#0FFF50"
+                android:progressBackgroundTint="#2A2A4A"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+        <!-- Explanation Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="20dp"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💡 Explanation"
+                android:textSize="16sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textExplanation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="14sp"
+                android:textColor="#AABBCC"
+                android:lineSpacingExtra="6dp"
+                android:layout_marginTop="12dp" />
+        </LinearLayout>
+
+        <!-- Back Button -->
+        <Button
+            android:id="@+id/btnBack"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="← ANALYZE ANOTHER TEXT"
+            android:textSize="14sp"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/button_bg"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="24dp" />
+
+    </LinearLayout>
+</ScrollView>
