@@ -5,93 +5,41 @@
     android:viewportWidth="100"
     android:viewportHeight="100">
 
-    <!-- Premium Shield Backdrop (Truth & Protection Metaphor) -->
+    <!-- Simple Premium Circular Backdrop -->
     <path
-        android:pathData="M 50,12 C 70,12 85,16 85,28 C 85,55 58,82 50,88 C 42,82 15,55 15,28 C 15,16 30,12 50,12 Z"
-        android:fillColor="#111625"
-        android:strokeColor="#22304F"
-        android:strokeWidth="1.5" />
-
-    <!-- Outer Tech-Dashed Scanner Ring -->
-    <path
-        android:pathData="M 50,20 A 30,30 0 1,1 49.9,20"
-        android:strokeColor="#00B0FF"
-        android:strokeWidth="2.5"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
-
-    <!-- Outer Circular Scanner Ring Glow Ring (Translucent Accent) -->
-    <path
-        android:pathData="M 50,20 A 30,30 0 1,1 49.9,20"
-        android:strokeColor="#1A00B0FF"
-        android:strokeWidth="8"
-        android:strokeLineCap="round" />
-
-    <!-- Glowing Laser Scanner Line Base Glow (Hot Pink 20% Opacity) -->
-    <path
-        android:pathData="M 18,50 L 82,50"
-        android:strokeColor="#33E94560"
-        android:strokeWidth="8"
-        android:strokeLineCap="round" />
-
-    <!-- Glowing Laser Scanner Line (Hot Pink / TruthLens Neon) -->
-    <path
-        android:pathData="M 18,50 L 82,50"
+        android:pathData="M 50,6 A 44,44 0 1,1 49.9,6 Z"
+        android:fillColor="#1A1A2E"
         android:strokeColor="#E94560"
-        android:strokeWidth="3.5"
-        android:strokeLineCap="round" />
+        android:strokeWidth="3" />
 
-    <!-- Stylized Connected TL Monogram -->
     <!-- 'T' Top Bar -->
     <path
-        android:pathData="M 36,36 L 56,36"
+        android:pathData="M 28,32 L 60,32"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="5"
+        android:strokeWidth="8"
         android:strokeLineCap="round" />
 
     <!-- 'T' & 'L' Shared Main Stem -->
     <path
-        android:pathData="M 46,36 L 46,58"
+        android:pathData="M 44,32 L 44,68"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="5"
+        android:strokeWidth="8"
         android:strokeLineCap="round" />
 
     <!-- 'L' Base Extension (Accent Blue) -->
     <path
-        android:pathData="M 46,58 L 62,58"
+        android:pathData="M 44,68 L 72,68"
         android:strokeColor="#00B0FF"
-        android:strokeWidth="5"
+        android:strokeWidth="8"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
 
     <!-- 'L' Upward Lip (Accent Blue) -->
     <path
-        android:pathData="M 62,58 L 62,48"
+        android:pathData="M 72,68 L 72,50"
         android:strokeColor="#00B0FF"
-        android:strokeWidth="5"
+        android:strokeWidth="8"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
-
-    <!-- Scanning Target Crosshairs (Corner brackets) -->
-    <path
-        android:pathData="M 28,28 L 24,28 L 24,32"
-        android:strokeColor="#0FFF50"
-        android:strokeWidth="2"
-        android:strokeLineCap="round" />
-    <path
-        android:pathData="M 72,28 L 76,28 L 76,32"
-        android:strokeColor="#0FFF50"
-        android:strokeWidth="2"
-        android:strokeLineCap="round" />
-    <path
-        android:pathData="M 24,68 L 24,72 L 28,72"
-        android:strokeColor="#0FFF50"
-        android:strokeWidth="2"
-        android:strokeLineCap="round" />
-    <path
-        android:pathData="M 76,68 L 76,72 L 72,72"
-        android:strokeColor="#0FFF50"
-        android:strokeWidth="2"
-        android:strokeLineCap="round" />
 
 </vector>

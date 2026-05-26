@@ -161,12 +161,30 @@ public class TextSelectionActivity extends AppCompatActivity {
                         isDraggingStartHandle = false;
                         isDraggingEndHandle = false;
                         hasSelection = true;
-                        drawSelection();
 
                         float dist = (float) Math.hypot(endX - startX, endY - startY);
                         if (dist < 15 && wasSelecting) { // Tapped
                             selectTappedWord(startX, startY);
                         } else {
+                            // Snap handle positions to actual boundaries of start and end words
+                            if (ocrComplete && !detectedWords.isEmpty()) {
+                                int startWordIdx = findClosestWordIndex(startX, startY);
+                                int endWordIdx = findClosestWordIndex(endX, endY);
+                                if (startWordIdx != -1 && endWordIdx != -1) {
+                                    int minIdx = Math.min(startWordIdx, endWordIdx);
+                                    int maxIdx = Math.max(startWordIdx, endWordIdx);
+                                    
+                                    Rect startRect = detectedWords.get(minIdx).getBoundingBox();
+                                    Rect endRect = detectedWords.get(maxIdx).getBoundingBox();
+                                    if (startRect != null && endRect != null) {
+                                        startX = startRect.left;
+                                        startY = startRect.centerY();
+                                        endX = endRect.right;
+                                        endY = endRect.centerY();
+                                    }
+                                }
+                            }
+                            drawSelection();
                             updateSelectionText();
                         }
                     }
@@ -300,32 +318,14 @@ public class TextSelectionActivity extends AppCompatActivity {
         List<Integer> selectedIndices = new ArrayList<>();
         if (!ocrComplete || detectedWords.isEmpty()) return selectedIndices;
 
-        // Form the 2D selection rectangle from startX/Y and endX/Y
-        float left = Math.min(startX, endX);
-        float right = Math.max(startX, endX);
-        float top = Math.min(startY, endY);
-        float bottom = Math.max(startY, endY);
+        int startIndex = findClosestWordIndex(startX, startY);
+        int endIndex = findClosestWordIndex(endX, endY);
 
-        // If it's a tap or single-point, give it a tiny height/width to ensure intersection math works
-        if (right - left < 2) {
-            left -= 1;
-            right += 1;
-        }
-        if (bottom - top < 2) {
-            top -= 1;
-            bottom += 1;
-        }
-
-        RectF selectionRect = new RectF(left, top, right, bottom);
-
-        // Check 2D geometric intersection for each detected word
-        for (int i = 0; i < detectedWords.size(); i++) {
-            Rect rect = detectedWords.get(i).getBoundingBox();
-            if (rect != null) {
-                RectF wordRect = new RectF(rect);
-                if (RectF.intersects(selectionRect, wordRect)) {
-                    selectedIndices.add(i);
-                }
+        if (startIndex != -1 && endIndex != -1) {
+            int minIdx = Math.min(startIndex, endIndex);
+            int maxIdx = Math.max(startIndex, endIndex);
+            for (int i = minIdx; i <= maxIdx; i++) {
+                selectedIndices.add(i);
             }
         }
         return selectedIndices;
