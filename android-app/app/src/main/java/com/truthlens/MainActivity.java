@@ -56,8 +56,6 @@ public class MainActivity extends AppCompatActivity {
     private Button btnViewHistory;
     private ProgressBar progressBar;
     private TextView textLoading;
-    private TextView textCurrentServer;
-    private Button btnConfigureServer;
 
     private boolean isOverlayActive = false;
 
@@ -66,10 +64,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Load stored server URL from SharedPreferences
-        SharedPreferences prefs = getSharedPreferences("TruthLensPrefs", MODE_PRIVATE);
-        String savedUrl = prefs.getString("backend_url", "https://truthlens-backend-0rlr.onrender.com/");
-        RetrofitClient.updateBaseUrl(savedUrl);
 
         // Initialize views safely
         editTextInput = findViewById(R.id.editTextInput);
@@ -81,16 +75,6 @@ public class MainActivity extends AppCompatActivity {
         btnViewHistory = findViewById(R.id.btnViewHistory);
         progressBar = findViewById(R.id.progressBar);
         textLoading = findViewById(R.id.textLoading);
-        textCurrentServer = findViewById(R.id.textCurrentServer);
-        btnConfigureServer = findViewById(R.id.btnConfigureServer);
-
-        if (textCurrentServer != null) {
-            textCurrentServer.setText("Current: " + RetrofitClient.getBaseUrl());
-        }
-
-        if (btnConfigureServer != null) {
-            btnConfigureServer.setOnClickListener(v -> showServerConfigDialog());
-        }
 
         // Word counter
         if (editTextInput != null) {
@@ -302,65 +286,5 @@ public class MainActivity extends AppCompatActivity {
         if (btnAnalyze != null) btnAnalyze.setEnabled(!show);
     }
 
-    private void showServerConfigDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Configure Server Connection");
 
-        // Container to hold input field and helper text with custom padding
-        LinearLayout container = new LinearLayout(this);
-        container.setOrientation(LinearLayout.VERTICAL);
-        int padding = (int) (20 * getResources().getDisplayMetrics().density);
-        container.setPadding(padding, padding, padding, padding);
-
-        final EditText input = new EditText(this);
-        input.setText(RetrofitClient.getBaseUrl());
-        input.setHint("http://192.168.x.x:8080/");
-        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
-        input.setTextColor(0xFFFFFFFF); // High visibility in dark theme
-        input.setHintTextColor(0xFF556677);
-        container.addView(input);
-
-        // Helper text explaining setup options
-        TextView helpText = new TextView(this);
-        helpText.setText("\nCommon Options:\n" +
-                "• Emulator: http://10.0.2.2:8080/\n" +
-                "• Real Device: Your PC IP (e.g., http://192.168.1.5:8080/)\n\n" +
-                "Make sure your backend server is running and the device is connected to the same WiFi network!");
-        helpText.setTextSize(13);
-        helpText.setTextColor(0xFF8899AA);
-        container.addView(helpText);
-
-        builder.setView(container);
-
-        builder.setPositiveButton("Save", (dialog, which) -> {
-            String newUrl = input.getText().toString().trim();
-            if (newUrl.isEmpty()) {
-                Toast.makeText(this, "URL cannot be empty", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (!newUrl.startsWith("http://") && !newUrl.startsWith("https://")) {
-                newUrl = "http://" + newUrl;
-            }
-            if (!newUrl.endsWith("/")) {
-                newUrl += "/";
-            }
-
-            // Save to SharedPreferences
-            SharedPreferences sp = getSharedPreferences("TruthLensPrefs", MODE_PRIVATE);
-            sp.edit().putString("backend_url", newUrl).apply();
-
-            // Update Retrofit Client
-            RetrofitClient.updateBaseUrl(newUrl);
-
-            // Update UI
-            if (textCurrentServer != null) {
-                textCurrentServer.setText("Current: " + newUrl);
-            }
-
-            Toast.makeText(this, "Server URL updated successfully!", Toast.LENGTH_SHORT).show();
-        });
-
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-        builder.show();
-    }
 }
