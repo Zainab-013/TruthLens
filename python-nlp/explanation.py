@@ -26,79 +26,68 @@ def generate_explanation(scores: dict) -> list:
     # --- Perplexity Explanations ---
     if perplexity < 0.3:
         explanations.append(
-            "Perplexity (Text Predictability): The text shows exceptionally low perplexity, "
-            "indicating highly predictable patterns. Large language models inherently generate text "
-            "by selecting statistically probable next words, leading to a uniform flow. "
-            "This predictability is a strong mathematical indicator of AI-generated content."
+            "Predictability: The text is too perfect and predictable, with no spelling mistakes, "
+            "typos, or natural writing errors. AI models write by picking the statistically most "
+            "likely words, which makes the text flow in a very uniform, robotic way."
         )
     elif perplexity < 0.5:
         explanations.append(
-            "Perplexity (Text Predictability): The text exhibits moderate perplexity. "
-            "While some phrasing is dynamic, other segments align closely with common statistical "
-            "patterns, suggesting partial AI involvement, co-authoring, or heavy machine editing."
+            "Predictability: Some sentences are highly predictable and error-free, while others feel natural. "
+            "This suggests a human might have used an AI writing assistant, translation tool, or editor to help."
         )
     else:
         explanations.append(
-            "Perplexity (Text Predictability): The text exhibits high perplexity, meaning the vocabulary "
-            "choices and transitions are highly creative and unpredictable. This linguistic variety "
-            "is a hallmark of authentic human thought and spontaneous writing."
+            "Predictability: The writing uses creative, unexpected phrasing and natural, conversational flow. "
+            "Humans naturally write with spontaneous, unpredictable patterns that AI cannot easily replicate."
         )
 
     # --- Burstiness Explanations ---
     if burstiness < 0.3:
         explanations.append(
-            "Burstiness (Sentence Length Variety): The sentences have very similar lengths and rhythmic "
-            "structures. While human authors naturally vary sentence structure to create tempo and voice, "
-            "AI models tend to output text with extremely consistent, uniform sentence lengths, creating a flat cadence."
+            "Sentence Variety: The sentences are all about the same length and structure. Humans naturally "
+            "mix short and long sentences to create flow, whereas AI tends to write in a very steady, flat rhythm."
         )
     elif burstiness < 0.5:
         explanations.append(
-            "Burstiness (Sentence Length Variety): The sentence lengths show limited variation. "
-            "The rhythm is somewhat mechanical and lacks the natural, dynamic transitions between short "
-            "and long sentences common in human prose."
+            "Sentence Variety: The sentences have very similar lengths and lack the dynamic rise and fall of "
+            "natural, human storytelling."
         )
     else:
         explanations.append(
-            "Burstiness (Sentence Length Variety): The text features a highly dynamic rhythm with mixed "
-            "sentence lengths. The interplay of brief and detailed statements indicates a natural, "
-            "expressive voice characteristic of human authorship."
+            "Sentence Variety: The sentences have great variety, mixing short, punchy lines with longer, "
+            "descriptive sentences. This rhythmic contrast is typical of human writing."
         )
 
     # --- Vocabulary Richness Explanations ---
     if vocabulary < 0.3:
         explanations.append(
-            "Vocabulary Diversity (TTR): The lexical richness is low, relying heavily on a small set "
-            "of repetitive words. AI generators frequently default to high-probability vocabulary, "
-            "whereas human writers tend to employ a broader, more expressive lexicon."
+            "Word Variety: The writing relies on a small group of simple words, repeating them frequently. "
+            "AI models tend to play it safe by using common, generic vocabulary over and over."
         )
     elif vocabulary < 0.5:
         explanations.append(
-            "Vocabulary Diversity (TTR): The word selection is moderately diverse, using standard "
-            "terminology. It does not strongly lean toward either AI or human writing patterns on a lexical level."
+            "Word Variety: The variety of words used is standard, neither extremely repetitive nor exceptionally rich."
         )
     else:
         explanations.append(
-            "Vocabulary Diversity (TTR): The text demonstrates outstanding lexical diversity, using a wide "
-            "range of unique words and precise synonyms. This sophisticated use of vocabulary points "
-            "strongly to organic, creative human writing."
+            "Word Variety: The writing uses a rich variety of different words and synonyms. "
+            "This expressive vocabulary is a strong indicator of human creativity."
         )
 
     # --- Repetition Explanations ---
     if repetition < 0.3:
         explanations.append(
-            "Repetition & Redundancy: High frequency of repeated words or nested phrases. "
-            "AI language models often suffer from structural loops or semantic redundancy, which leads "
-            "to artificial patterns of repetition."
+            "Repetition: The same phrases or sentence structures are repeated multiple times. "
+            "AI models often get stuck in loops and repeat themselves unnecessarily."
         )
     elif repetition < 0.5:
         explanations.append(
-            "Repetition & Redundancy: Some repetitive phrases or recurring structures are present, "
-            "indicating moderate phrasing constraints or stylistic redundancy."
+            "Repetition: There is some repetition of word patterns, making some parts feel a bit redundant."
         )
     else:
         explanations.append(
-            "Repetition & Redundancy: Extremely low repetition. The text flows naturally with unique "
-            "syntax and varied phrasing, characteristic of high-quality human writing."
+            "Repetition: Very few words or phrases are repeated. The writing feels fresh and uses unique "
+            "expressions, which points to high-quality human writing."
         )
 
     return explanations

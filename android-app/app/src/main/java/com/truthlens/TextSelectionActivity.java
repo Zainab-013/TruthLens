@@ -116,12 +116,42 @@ public class TextSelectionActivity extends AppCompatActivity {
 
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    if (hasSelection && isNearStartHandle(tx, ty)) {
-                        isDraggingStartHandle = true;
-                        isSelecting = false;
-                    } else if (hasSelection && isNearEndHandle(tx, ty)) {
-                        isDraggingEndHandle = true;
-                        isSelecting = false;
+                    if (hasSelection) {
+                        float density = getResources().getDisplayMetrics().density;
+                        float hitRadius = 60f * density; // 60dp comfortable hit radius
+
+                        // Calculate screen-space distances to both handles
+                        float distStart = (float) Math.hypot(tx - startX, ty - startY) * scale;
+                        float distEnd = (float) Math.hypot(tx - endX, ty - endY) * scale;
+
+                        boolean nearStart = distStart < hitRadius;
+                        boolean nearEnd = distEnd < hitRadius;
+
+                        if (nearStart && nearEnd) {
+                            // If close to both handles (e.g. small selection), select the closer one
+                            if (distStart <= distEnd) {
+                                isDraggingStartHandle = true;
+                            } else {
+                                isDraggingEndHandle = true;
+                            }
+                            isSelecting = false;
+                        } else if (nearStart) {
+                            isDraggingStartHandle = true;
+                            isSelecting = false;
+                        } else if (nearEnd) {
+                            isDraggingEndHandle = true;
+                            isSelecting = false;
+                        } else {
+                            // Start a new selection
+                            startX = tx;
+                            startY = ty;
+                            endX = tx;
+                            endY = ty;
+                            isSelecting = true;
+                            isDraggingStartHandle = false;
+                            isDraggingEndHandle = false;
+                            hasSelection = false;
+                        }
                     } else {
                         // Start a new selection
                         startX = tx;
@@ -395,13 +425,19 @@ public class TextSelectionActivity extends AppCompatActivity {
             handleGlowPaint.setStyle(Paint.Style.FILL);
             handleGlowPaint.setAntiAlias(true);
 
+            // Compute density-aware handle and glow radii in image coordinates
+            float density = getResources().getDisplayMetrics().density;
+            float s = (scale > 0) ? scale : 1f;
+            float handleRadius = (12f * density) / s;
+            float glowRadius = (22f * density) / s;
+
             // Start handle
-            canvas.drawCircle(startX, startY, 32, handleGlowPaint);
-            canvas.drawCircle(startX, startY, 20, handlePaint);
+            canvas.drawCircle(startX, startY, glowRadius, handleGlowPaint);
+            canvas.drawCircle(startX, startY, handleRadius, handlePaint);
 
             // End handle
-            canvas.drawCircle(endX, endY, 32, handleGlowPaint);
-            canvas.drawCircle(endX, endY, 20, handlePaint);
+            canvas.drawCircle(endX, endY, glowRadius, handleGlowPaint);
+            canvas.drawCircle(endX, endY, handleRadius, handlePaint);
         }
 
         imageView.setImageBitmap(displayBitmap);
@@ -411,17 +447,34 @@ public class TextSelectionActivity extends AppCompatActivity {
      * Taps a word to select it directly
      */
     private void selectTappedWord(float x, float y) {
-        for (Text.Element element : detectedWords) {
-            RectF elemRect = new RectF(element.getBoundingBox());
-            if (elemRect.contains(x, y)) {
-                startX = elemRect.left;
-                startY = elemRect.centerY();
-                endX = elemRect.right;
-                endY = elemRect.centerY();
-                hasSelection = true;
-                drawSelection();
-                updateSelectionText();
-                return;
+        if (detectedWords.isEmpty()) return;
+
+        int closestIdx = findClosestWordIndex(x, y);
+        if (closestIdx != -1) {
+            Text.Element element = detectedWords.get(closestIdx);
+            Rect rect = element.getBoundingBox();
+            if (rect != null) {
+                RectF elemRect = new RectF(rect);
+                
+                // Get distance in screen pixels
+                float density = getResources().getDisplayMetrics().density;
+                float maxTapDistance = 48f * density; // 48dp search radius for tap
+                
+                // Calculate distance from (x, y) to the nearest point on the rect
+                float dx = Math.max(elemRect.left - x, Math.max(0f, x - elemRect.right));
+                float dy = Math.max(elemRect.top - y, Math.max(0f, y - elemRect.bottom));
+                float distScreen = (float) Math.hypot(dx, dy) * scale;
+                
+                if (distScreen < maxTapDistance) {
+                    startX = elemRect.left;
+                    startY = elemRect.centerY();
+                    endX = elemRect.right;
+                    endY = elemRect.centerY();
+                    hasSelection = true;
+                    drawSelection();
+                    updateSelectionText();
+                    return;
+                }
             }
         }
 
