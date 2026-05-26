@@ -18,8 +18,7 @@
         android:strokeColor="#00B0FF"
         android:strokeWidth="2.5"
         android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:strokeDashArray="8,10" />
+        android:strokeLineJoin="round" />
 
     <!-- Outer Circular Scanner Ring Glow Ring (Translucent Accent) -->
     <path
