@@ -12,15 +12,6 @@
         android:padding="24dp"
         android:gravity="center_horizontal">
 
-        <!-- App Logo of Choice -->
-        <ImageView
-            android:id="@+id/imgLogo"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_marginTop="24dp"
-            android:src="@drawable/ic_logo"
-            android:contentDescription="TruthLens App Logo" />
-
         <!-- App Title -->
         <TextView
             android:layout_width="wrap_content"
@@ -29,7 +20,7 @@
             android:textSize="32sp"
             android:textColor="#E94560"
             android:textStyle="bold"
-            android:layout_marginTop="8dp" />
+            android:layout_marginTop="40dp" />
 
         <TextView
             android:layout_width="wrap_content"
