@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.Image;
@@ -18,193 +19,230 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
-import com.google.mlkit.vision.common.InputImage;
-import com.google.mlkit.vision.text.TextRecognition;
-import com.google.mlkit.vision.text.TextRecognizer;
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
-import com.truthlens.api.ApiService;
-import com.truthlens.api.RetrofitClient;
-import com.truthlens.model.AnalyzeRequest;
-import com.truthlens.model.AnalyzeResponse;
-
+import java.io.File;
+import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 /**
  * ScreenCaptureActivity
  *
- * Handles the screen capture flow:
- * 1. Request MediaProjection permission
- * 2. Capture screenshot
- * 3. Run OCR (Google ML Kit) to extract text
- * 4. Send text to API for analysis
- * 5. Open ResultActivity with results
+ * 1. Requests screen capture permission
+ * 2. Captures screenshot
+ * 3. Saves to file
+ * 4. Opens TextSelectionActivity for user to select text region
  */
 public class ScreenCaptureActivity extends Activity {
 
-    private static final int REQUEST_MEDIA_PROJECTION = 1001;
-    private MediaProjectionManager projectionManager;
+    private static final int REQUEST_CAPTURE = 1001;
+    private MediaProjectionManager projManager;
+    private VirtualDisplay virtualDisplay;
+    private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
+    private Runnable timeoutRunnable;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Request screen capture permission
-        projectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-        Intent captureIntent = projectionManager.createScreenCaptureIntent();
-        startActivityForResult(captureIntent, REQUEST_MEDIA_PROJECTION);
+        try {
+            projManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+            startActivityForResult(projManager.createScreenCaptureIntent(), REQUEST_CAPTURE);
+        } catch (Exception e) {
+            Toast.makeText(this, "Screen capture not available: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            finish();
+        }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == REQUEST_MEDIA_PROJECTION) {
-            if (resultCode == RESULT_OK && data != null) {
-                // Small delay to let the permission dialog close
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    captureScreen(resultCode, data);
-                }, 500);
-            } else {
-                Toast.makeText(this, "Screen capture permission denied", Toast.LENGTH_SHORT).show();
-                finish();
-            }
+        if (requestCode == REQUEST_CAPTURE && resultCode == RESULT_OK && data != null) {
+            // Small delay to let permission dialog close
+            new Handler(Looper.getMainLooper()).postDelayed(() -> captureScreen(resultCode, data), 500);
+        } else {
+            Toast.makeText(this, "Screen capture cancelled", Toast.LENGTH_SHORT).show();
+            finish();
         }
     }
 
     private void captureScreen(int resultCode, Intent data) {
-        DisplayMetrics metrics = getResources().getDisplayMetrics();
-        int width = metrics.widthPixels;
-        int height = metrics.heightPixels;
-        int density = metrics.densityDpi;
+        try {
+            DisplayMetrics metrics = getResources().getDisplayMetrics();
+            int width = metrics.widthPixels;
+            int height = metrics.heightPixels;
+            int density = metrics.densityDpi;
 
-        ImageReader imageReader = ImageReader.newInstance(width, height, android.graphics.PixelFormat.RGBA_8888, 2);
+            ImageReader reader = ImageReader.newInstance(width, height,
+                    android.graphics.PixelFormat.RGBA_8888, 2);
 
-        MediaProjection projection = projectionManager.getMediaProjection(resultCode, data);
-
-        VirtualDisplay virtualDisplay = projection.createVirtualDisplay(
-                "TruthLensCapture",
-                width, height, density,
-                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                imageReader.getSurface(),
-                null, null
-        );
-
-        // Wait a moment for the image to be ready
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            Image image = imageReader.acquireLatestImage();
-
-            if (image != null) {
-                // Convert Image to Bitmap
-                Image.Plane[] planes = image.getPlanes();
-                ByteBuffer buffer = planes[0].getBuffer();
-                int pixelStride = planes[0].getPixelStride();
-                int rowStride = planes[0].getRowStride();
-                int rowPadding = rowStride - pixelStride * width;
-
-                Bitmap bitmap = Bitmap.createBitmap(
-                        width + rowPadding / pixelStride, height,
-                        Bitmap.Config.ARGB_8888
-                );
-                bitmap.copyPixelsFromBuffer(buffer);
-
-                // Crop to actual screen size
-                bitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height);
-
-                image.close();
-                virtualDisplay.release();
-                projection.stop();
-                imageReader.close();
-
-                // Run OCR on the bitmap
-                runOCR(bitmap);
-
+            // Upgrade service to MEDIA_PROJECTION type BEFORE obtaining projection token on Android 10+
+            Intent upgradeIntent = new Intent(this, com.truthlens.overlay.FloatingButtonService.class);
+            upgradeIntent.setAction(com.truthlens.overlay.FloatingButtonService.ACTION_START_PROJECTION);
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                startForegroundService(upgradeIntent);
             } else {
-                Toast.makeText(this, "Failed to capture screen", Toast.LENGTH_SHORT).show();
-                virtualDisplay.release();
-                projection.stop();
-                imageReader.close();
-                finish();
+                startService(upgradeIntent);
             }
-        }, 1000);
-    }
 
-    /**
-     * Extract text from screenshot using Google ML Kit OCR
-     */
-    private void runOCR(Bitmap bitmap) {
-        Toast.makeText(this, "Extracting text...", Toast.LENGTH_SHORT).show();
-
-        InputImage image = InputImage.fromBitmap(bitmap, 0);
-        TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
-
-        recognizer.process(image)
-                .addOnSuccessListener(text -> {
-                    String extractedText = text.getText();
-
-                    if (extractedText.isEmpty()) {
-                        Toast.makeText(this, "No text found on screen", Toast.LENGTH_LONG).show();
+            // Introduce a 200ms delay to let the service transition to MEDIA_PROJECTION type
+            // to avoid a SecurityException race condition on Android 14+
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                try {
+                    MediaProjection projection = projManager.getMediaProjection(resultCode, data);
+                    if (projection == null) {
+                        Toast.makeText(this, "Failed to get MediaProjection", Toast.LENGTH_SHORT).show();
+                        // Downgrade service back to standard overlay
+                        Intent downgradeIntent = new Intent(this, com.truthlens.overlay.FloatingButtonService.class);
+                        downgradeIntent.setAction(com.truthlens.overlay.FloatingButtonService.ACTION_STOP_PROJECTION);
+                        startService(downgradeIntent);
+                        reader.close();
                         finish();
                         return;
                     }
 
-                    // Check word count
-                    int wordCount = extractedText.trim().split("\\s+").length;
-                    if (wordCount < 50) {
-                        Toast.makeText(this,
-                                "Only " + wordCount + " words found. Need at least 50 words.",
-                                Toast.LENGTH_LONG).show();
-                        finish();
-                        return;
-                    }
+                    // Register callback to comply with Android 14+ requirements
+                    projection.registerCallback(new MediaProjection.Callback() {
+                        @Override
+                        public void onStop() {
+                            super.onStop();
+                        }
+                    }, new Handler(Looper.getMainLooper()));
 
-                    // Send to API
-                    analyzeText(extractedText);
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "OCR failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    reader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
+                        private boolean captured = false;
+
+                        @Override
+                        public void onImageAvailable(ImageReader reader) {
+                            if (captured) return;
+
+                            Image image = null;
+                            try {
+                                image = reader.acquireNextImage();
+                                if (image != null) {
+                                    captured = true;
+                                    if (timeoutRunnable != null) {
+                                        timeoutHandler.removeCallbacks(timeoutRunnable);
+                                        timeoutRunnable = null;
+                                    }
+
+                                    // Convert to bitmap
+                                    Image.Plane[] planes = image.getPlanes();
+                                    ByteBuffer buffer = planes[0].getBuffer();
+                                    int pixelStride = planes[0].getPixelStride();
+                                    int rowStride = planes[0].getRowStride();
+                                    int rowPadding = rowStride - pixelStride * width;
+
+                                    Bitmap bitmap = Bitmap.createBitmap(
+                                            width + rowPadding / pixelStride, height,
+                                            Bitmap.Config.ARGB_8888);
+                                    bitmap.copyPixelsFromBuffer(buffer);
+                                    bitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height);
+
+                                    image.close();
+                                    if (virtualDisplay != null) {
+                                        virtualDisplay.release();
+                                        virtualDisplay = null;
+                                    }
+                                    projection.stop();
+                                    reader.close();
+
+                                    // Downgrade service back to standard overlay type
+                                    Intent downgradeIntent = new Intent(ScreenCaptureActivity.this, com.truthlens.overlay.FloatingButtonService.class);
+                                    downgradeIntent.setAction(com.truthlens.overlay.FloatingButtonService.ACTION_STOP_PROJECTION);
+                                    startService(downgradeIntent);
+
+                                    // Save bitmap to temp file
+                                    File file = new File(getCacheDir(), "screenshot.png");
+                                    FileOutputStream fos = new FileOutputStream(file);
+                                    bitmap.compress(Bitmap.CompressFormat.PNG, 90, fos);
+                                    fos.close();
+
+                                    // Open TextSelectionActivity
+                                    Intent intent = new Intent(ScreenCaptureActivity.this, TextSelectionActivity.class);
+                                    intent.putExtra("screenshot_path", file.getAbsolutePath());
+                                    startActivity(intent);
+                                    finish();
+                                }
+                            } catch (Exception e) {
+                                Toast.makeText(ScreenCaptureActivity.this, "Capture error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                if (timeoutRunnable != null) {
+                                    timeoutHandler.removeCallbacks(timeoutRunnable);
+                                    timeoutRunnable = null;
+                                }
+                                if (image != null) {
+                                    try { image.close(); } catch (Exception ignored) {}
+                                }
+                                if (virtualDisplay != null) {
+                                     try { virtualDisplay.release(); } catch (Exception ignored) {}
+                                     virtualDisplay = null;
+                                }
+                                try { projection.stop(); } catch (Exception ignored) {}
+                                try { reader.close(); } catch (Exception ignored) {}
+
+                                // Downgrade service back to standard overlay type
+                                Intent downgradeIntent = new Intent(ScreenCaptureActivity.this, com.truthlens.overlay.FloatingButtonService.class);
+                                downgradeIntent.setAction(com.truthlens.overlay.FloatingButtonService.ACTION_STOP_PROJECTION);
+                                startService(downgradeIntent);
+
+                                finish();
+                            }
+                        }
+                    }, new Handler(Looper.getMainLooper()));
+
+                    // Now start the virtual display AFTER the listener is set
+                    virtualDisplay = projection.createVirtualDisplay(
+                            "TruthLens", width, height, density,
+                            DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                            reader.getSurface(), null, null);
+
+                    timeoutRunnable = new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(ScreenCaptureActivity.this, "Screen capture timed out. Please try again.", Toast.LENGTH_LONG).show();
+                            if (virtualDisplay != null) {
+                                try { virtualDisplay.release(); } catch (Exception ignored) {}
+                                virtualDisplay = null;
+                            }
+                            try { projection.stop(); } catch (Exception ignored) {}
+                            try { reader.close(); } catch (Exception ignored) {}
+
+                            // Downgrade service back to standard overlay type
+                            Intent downgradeIntent = new Intent(ScreenCaptureActivity.this, com.truthlens.overlay.FloatingButtonService.class);
+                            downgradeIntent.setAction(com.truthlens.overlay.FloatingButtonService.ACTION_STOP_PROJECTION);
+                            startService(downgradeIntent);
+
+                            finish();
+                        }
+                    };
+                    timeoutHandler.postDelayed(timeoutRunnable, 3000);
+
+                } catch (Exception e) {
+                    Toast.makeText(this, "Screenshot error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    // Downgrade service back to standard overlay type
+                    Intent downgradeIntent = new Intent(this, com.truthlens.overlay.FloatingButtonService.class);
+                    downgradeIntent.setAction(com.truthlens.overlay.FloatingButtonService.ACTION_STOP_PROJECTION);
+                    startService(downgradeIntent);
+                    try { reader.close(); } catch (Exception ignored) {}
                     finish();
-                });
+                }
+            }, 200);
+
+        } catch (Exception e) {
+            Toast.makeText(this, "Screenshot error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            // Downgrade service back to standard overlay type
+            Intent downgradeIntent = new Intent(this, com.truthlens.overlay.FloatingButtonService.class);
+            downgradeIntent.setAction(com.truthlens.overlay.FloatingButtonService.ACTION_STOP_PROJECTION);
+            startService(downgradeIntent);
+            finish();
+        }
     }
 
-    /**
-     * Send extracted text to Spring Boot API
-     */
-    private void analyzeText(String text) {
-        Toast.makeText(this, "Analyzing text...", Toast.LENGTH_SHORT).show();
-
-        ApiService apiService = RetrofitClient.getApiService();
-        AnalyzeRequest request = new AnalyzeRequest(text);
-
-        apiService.analyzeText(request).enqueue(new Callback<AnalyzeResponse>() {
-            @Override
-            public void onResponse(Call<AnalyzeResponse> call, Response<AnalyzeResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    AnalyzeResponse result = response.body();
-
-                    Intent intent = new Intent(ScreenCaptureActivity.this, ResultActivity.class);
-                    intent.putExtra("ai_percentage", result.getAi_percentage());
-                    intent.putExtra("human_percentage", result.getHuman_percentage());
-                    intent.putExtra("verdict", result.getVerdict());
-                    String[] explanations = result.getExplanation().toArray(new String[0]);
-                    intent.putExtra("explanation", explanations);
-                    startActivity(intent);
-                } else {
-                    Toast.makeText(ScreenCaptureActivity.this,
-                            "Analysis failed", Toast.LENGTH_SHORT).show();
-                }
-                finish();
-            }
-
-            @Override
-            public void onFailure(Call<AnalyzeResponse> call, Throwable t) {
-                Toast.makeText(ScreenCaptureActivity.this,
-                        "Connection failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
-                finish();
-            }
-        });
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (timeoutRunnable != null) {
+            timeoutHandler.removeCallbacks(timeoutRunnable);
+            timeoutRunnable = null;
+        }
     }
 }

@@ -1,8 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    HOME SCREEN - activity_main.xml
-    Now with Activate Overlay button + Text analysis
--->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -59,8 +55,7 @@
                 android:textColor="#8899AA"
                 android:layout_marginTop="4dp" />
 
-            <!-- Activate Button -->
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnActivateOverlay"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
@@ -71,7 +66,6 @@
                 android:background="@drawable/button_bg"
                 android:layout_marginTop="12dp" />
 
-            <!-- Deactivate Button (hidden by default) -->
             <Button
                 android:id="@+id/btnDeactivateOverlay"
                 android:layout_width="match_parent"
@@ -83,7 +77,6 @@
                 android:backgroundTint="#555555"
                 android:layout_marginTop="12dp"
                 android:visibility="gone" />
-
         </LinearLayout>
 
         <!-- ===== DIVIDER ===== -->
@@ -96,13 +89,24 @@
             android:layout_marginTop="20dp"
             android:layout_marginBottom="8dp" />
 
-        <!-- ===== TEXT INPUT SECTION ===== -->
+        <!-- ===== MANUAL TEXT INPUT ===== -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Paste text manually"
+            android:text="Paste or type text manually"
             android:textSize="14sp"
             android:textColor="#AABBCC"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Paste from Clipboard Button -->
+        <Button
+            android:id="@+id/btnPasteClipboard"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:text="PASTE FROM CLIPBOARD"
+            android:textSize="13sp"
+            android:textColor="#E94560"
+            android:backgroundTint="#16213E"
             android:layout_marginBottom="8dp" />
 
         <EditText
@@ -129,7 +133,7 @@
             android:textAlignment="viewEnd"
             android:layout_marginTop="4dp" />
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnAnalyze"
             android:layout_width="match_parent"
             android:layout_height="52dp"
@@ -140,7 +144,18 @@
             android:background="@drawable/button_bg"
             android:layout_marginTop="16dp" />
 
-        <!-- Loading -->
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnViewHistory"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="VIEW HISTORY"
+            android:textSize="15sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:background="@drawable/button_bg"
+            android:backgroundTint="#16213E"
+            android:layout_marginTop="12dp" />
+
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
@@ -158,6 +173,46 @@
             android:textColor="#8899AA"
             android:layout_marginTop="8dp"
             android:visibility="gone" />
+
+        <!-- ===== SERVER CONFIGURATION ===== -->
+        <LinearLayout
+            android:id="@+id/cardServerConfig"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="20dp"
+            android:layout_marginTop="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Backend Server Configuration"
+                android:textSize="16sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textCurrentServer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Current: http://172.20.21.30:8080/"
+                android:textSize="13sp"
+                android:textColor="#8899AA"
+                android:layout_marginTop="4dp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnConfigureServer"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="CHANGE SERVER URL"
+                android:textSize="14sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:background="@drawable/button_bg"
+                android:backgroundTint="#16213E"
+                android:layout_marginTop="12dp" />
+        </LinearLayout>
 
         <TextView
             android:layout_width="wrap_content"

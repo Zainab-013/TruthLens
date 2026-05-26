@@ -10,10 +10,21 @@ Run:
     uvicorn main:app --host 0.0.0.0 --port 5000 --reload
 """
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from analyzer import analyze_text
+from model_utils import load_model
+
+# ============================================================
+# Lifespan Events
+# ============================================================
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Pre-load the GPT-2 model at startup
+    load_model()
+    yield
 
 # ============================================================
 # App Setup
@@ -21,7 +32,8 @@ from analyzer import analyze_text
 app = FastAPI(
     title="TruthLens NLP Engine",
     description="AI vs Human Text Detection API",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Allow cross-origin requests from Android app & Spring Boot

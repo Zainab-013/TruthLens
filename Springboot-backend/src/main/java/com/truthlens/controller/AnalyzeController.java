@@ -5,6 +5,7 @@ import com.truthlens.model.AnalyzeResponse;
 import com.truthlens.service.NlpService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
@@ -72,6 +73,10 @@ public class AnalyzeController {
             AnalyzeResponse response = nlpService.analyzeText(request);
             return ResponseEntity.ok(response);
 
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of(
+                    "error", e.getReason() != null ? e.getReason() : e.getMessage()
+            ));
         } catch (RuntimeException e) {
             return ResponseEntity.internalServerError().body(Map.of(
                     "error", "Analysis failed: " + e.getMessage()

@@ -3,8 +3,13 @@ package com.truthlens.service;
 import com.truthlens.model.AnalyzeRequest;
 import com.truthlens.model.AnalyzeResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.server.ResponseStatusException;
+import java.util.Map;
 
 /**
  * NLP Service
@@ -18,15 +23,20 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Service
 public class NlpService {
 
-    private final WebClient webClient;
+    private final RestClient restClient;
 
     /**
-     * Constructor - creates WebClient with Python API base URL.
+     * Constructor - creates RestClient with Python API base URL.
      * URL is configured in application.properties
      */
     public NlpService(@Value("${nlp.api.url}") String nlpApiUrl) {
-        this.webClient = WebClient.builder()
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(5000);
+        requestFactory.setReadTimeout(30000);
+
+        this.restClient = RestClient.builder()
                 .baseUrl(nlpApiUrl)
+                .requestFactory(requestFactory)
                 .build();
     }
 
@@ -38,17 +48,24 @@ public class NlpService {
      */
     public AnalyzeResponse analyzeText(AnalyzeRequest request) {
         try {
-            AnalyzeResponse response = webClient.post()
+            return restClient.post()
                     .uri("/analyze")
-                    .bodyValue(request)
+                    .body(request)
                     .retrieve()
-                    .bodyToMono(AnalyzeResponse.class)
-                    .block(); // Synchronous call
-
-            return response;
-
+                    .body(AnalyzeResponse.class);
+        } catch (RestClientResponseException e) {
+            String errorDetail = e.getResponseBodyAsString();
+            try {
+                Map<?, ?> map = e.getResponseBodyAs(Map.class);
+                if (map != null && map.containsKey("detail")) {
+                    errorDetail = map.get("detail").toString();
+                }
+            } catch (Exception ignored) {
+            }
+            throw new ResponseStatusException(e.getStatusCode(), errorDetail, e);
         } catch (Exception e) {
-            throw new RuntimeException(
+            throw new ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
                 "Failed to connect to NLP Engine: " + e.getMessage(), e
             );
         }

@@ -38,19 +38,27 @@ def analyze_text(text: str) -> dict:
 
     # Step 2: Weighted final score (0 = AI, 1 = Human)
     final_score = (
-        0.4 * perplexity +
-        0.2 * burstiness +
-        0.2 * vocabulary +
-        0.2 * repetition
+        0.55 * perplexity +
+        0.25 * vocabulary +
+        0.20 * burstiness
     )
 
-    # Step 3: Convert to percentages
-    human_percentage = round(final_score * 100, 1)
-    ai_percentage = round((1 - final_score) * 100, 1)
+    # Step 3: Apply calibration scaling to push clear decisions closer to 0% and 100%
+    if final_score < 0.35:
+        scaled_score = final_score * 0.4
+    elif final_score > 0.65:
+        scaled_score = final_score + (1.0 - final_score) * 0.6
+    else:
+        # Linear interpolation in the middle zone
+        scaled_score = 0.14 + (final_score - 0.35) * (0.79 - 0.14) / (0.65 - 0.35)
+
+    # Convert to percentages
+    human_percentage = round(scaled_score * 100, 1)
+    ai_percentage = round((1 - scaled_score) * 100, 1)
 
     # Clamp values between 0 and 100
-    human_percentage = max(0, min(100, human_percentage))
-    ai_percentage = max(0, min(100, ai_percentage))
+    human_percentage = max(0.0, min(100.0, human_percentage))
+    ai_percentage = max(0.0, min(100.0, ai_percentage))
 
     # Step 4: Build scores dict
     scores = {
@@ -58,7 +66,7 @@ def analyze_text(text: str) -> dict:
         "burstiness": burstiness,
         "vocabulary_richness": vocabulary,
         "repetition": repetition,
-        "final_score": round(final_score, 4)
+        "final_score": round(scaled_score, 4)
     }
 
     # Step 5: Generate explanations and verdict

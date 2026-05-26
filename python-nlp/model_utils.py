@@ -4,8 +4,11 @@ Loads GPT-2 model ONCE and reuses it across requests.
 Prevents reloading the model again and again (performance boost).
 """
 
+import threading
+
 _model = None
 _tokenizer = None
+_lock = threading.Lock()
 
 
 def load_model():
@@ -17,12 +20,20 @@ def load_model():
     global _model, _tokenizer
 
     if _model is None:
-        print("[LOADING] GPT-2 model (first time only)...")
-        from transformers import GPT2LMHeadModel, GPT2TokenizerFast
+        with _lock:
+            if _model is None:
+                print("[LOADING] GPT-2 model (first time only)...")
+                import torch
+                
+                # Restrict PyTorch thread count to prevent CPU thread thrashing under concurrent requests
+                torch.set_num_threads(1)
+                
+                from transformers import GPT2LMHeadModel, GPT2TokenizerFast
 
-        _tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
-        _model = GPT2LMHeadModel.from_pretrained("gpt2")
-        _model.eval()  # Set to evaluation mode (no training)
-        print("[OK] GPT-2 model loaded successfully!")
+                _tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+                _model = GPT2LMHeadModel.from_pretrained("gpt2")
+                _model.eval()  # Set to evaluation mode (no training)
+                print("[OK] GPT-2 model loaded successfully!")
 
     return _model, _tokenizer
+

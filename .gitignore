@@ -3,6 +3,8 @@
 # ============================================
 
 # -------------------- Python --------------------
+Important Documents
+PROJECT_DOCUMENTATION.md
 venv/
 env/
 .venv/

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    TEXT SELECTION SCREEN
+    Shows screenshot, user draws rectangle to select text, then OCR + analyze
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#1A1A2E">
+
+    <!-- Instruction bar -->
+    <TextView
+        android:id="@+id/textInstruction"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Draw a rectangle around the text you want to analyze"
+        android:textSize="14sp"
+        android:textColor="#FFFFFF"
+        android:background="#E94560"
+        android:padding="12dp"
+        android:gravity="center" />
+
+    <!-- Screenshot image -->
+    <ImageView
+        android:id="@+id/imageScreenshot"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scaleType="fitCenter"
+        android:background="#000000" />
+
+    <!-- Progress bar -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        android:indeterminateTint="#E94560" />
+
+    <!-- Extracted text display -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxHeight="120dp">
+
+        <TextView
+            android:id="@+id/textExtracted"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#AABBCC"
+            android:textSize="13sp"
+            android:padding="12dp"
+            android:background="#16213E"
+            android:visibility="gone" />
+    </ScrollView>
+
+    <!-- Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/btnRetake"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="RETAKE"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#555555"
+            android:layout_marginEnd="8dp" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnAnalyze"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="ANALYZE"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/button_bg"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</LinearLayout>

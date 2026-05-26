@@ -19,16 +19,18 @@ from model_utils import load_model
 # Download required NLTK data
 nltk.download('punkt', quiet=True)
 nltk.download('punkt_tab', quiet=True)
+nltk.download('stopwords', quiet=True)
 
 
 # ============================================================
-# Feature 1: PERPLEXITY (Weight: 40%)
-# Low perplexity = predictable = likely AI-generated
-# High perplexity = unpredictable = likely human-written
+# Feature 1: PERPLEXITY (Weight: 60%)
+# Calibrated using token-level log-rank and cross-entropy loss.
+# Adjusted by word-length complexity to handle simple stories.
 # ============================================================
 def calculate_perplexity(text: str) -> float:
     """
-    Calculate perplexity using GPT-2.
+    Calculate predictability using GPT-2 loss and log-rank, calibrated
+    against expected human writing complexity (average word length).
     Returns a normalized score between 0 and 1.
     Lower score = more likely AI-generated.
     """
@@ -38,33 +40,55 @@ def calculate_perplexity(text: str) -> float:
 
     # Truncate text to 500 tokens (optimal range for accuracy)
     encodings = tokenizer(text, return_tensors="pt", truncation=True, max_length=500)
-    input_ids = encodings.input_ids
+    input_ids = encodings.input_ids[0]
 
-    if input_ids.shape[1] < 2:
+    if len(input_ids) < 2:
         return 0.5  # Not enough text to analyze
 
+    # Get model outputs and logits
     with torch.no_grad():
-        outputs = model(input_ids, labels=input_ids)
+        outputs = model(input_ids.unsqueeze(0), labels=input_ids.unsqueeze(0))
         loss = outputs.loss.item()
+        logits = outputs.logits[0]  # Shape: (seq_len, vocab_size)
 
-    # Raw perplexity
-    raw_perplexity = math.exp(loss)
+    # Calculate token ranks (GLTR-style)
+    ranks = []
+    for i in range(len(input_ids) - 1):
+        token_id = input_ids[i + 1].item()
+        token_logits = logits[i]
+        sorted_indices = torch.argsort(token_logits, descending=True)
+        rank = (sorted_indices == token_id).nonzero(as_tuple=True)[0].item() + 1
+        ranks.append(rank)
 
-    # Improved normalization using sigmoid curve
-    # AI text: perplexity typically 15-50
-    # Human text: perplexity typically 60-300+
-    # Midpoint at ~55 gives best separation
-    midpoint = 55
-    steepness = 0.04
-    normalized = 1 / (1 + math.exp(-steepness * (raw_perplexity - midpoint)))
+    avg_log_rank = np.mean([math.log(r) for r in ranks])
 
-    return round(normalized, 4)
+    # Word list for length calibration
+    words = word_tokenize(text.lower())
+    words = [w for w in words if w.isalpha()]
+    avg_word_len = np.mean([len(w) for w in words]) if len(words) > 0 else 4.0
+
+    # Expected human perplexity metrics based on average word length complexity (linear baseline)
+    expected_loss = 1.25 * avg_word_len - 2.24
+    expected_log_rank = 0.95 * avg_word_len - 2.44
+
+    # Calculate how much lower (more predictable/AI-like) the actual metrics are compared to human baseline
+    loss_diff = loss - expected_loss
+    rank_diff = avg_log_rank - expected_log_rank
+
+    # Pass the differences through calibrated sigmoids
+    score_loss = 1 / (1 + math.exp(-12.0 * (loss_diff + 0.05)))
+    score_rank = 1 / (1 + math.exp(-15.0 * (rank_diff + 0.04)))
+
+    # Combine Loss & Log-Rank scores
+    perplexity_score = 0.5 * score_loss + 0.5 * score_rank
+    perplexity_score = max(0.01, min(0.99, perplexity_score))
+    return round(perplexity_score, 4)
+
 
 
 # ============================================================
 # Feature 2: BURSTINESS (Weight: 20%)
-# Low burstiness = uniform sentences = likely AI
-# High burstiness = varied sentences = likely human
+# Calibrated sentence variation based on sentence counts.
 # ============================================================
 def calculate_burstiness(text: str) -> float:
     """
@@ -73,8 +97,9 @@ def calculate_burstiness(text: str) -> float:
     Lower score = more likely AI-generated.
     """
     sentences = sent_tokenize(text)
+    num_sentences = len(sentences)
 
-    if len(sentences) < 2:
+    if num_sentences < 2:
         return 0.5  # Not enough sentences
 
     # Calculate word count per sentence
@@ -89,71 +114,86 @@ def calculate_burstiness(text: str) -> float:
     # Coefficient of variation (CV) as burstiness measure
     cv = std_length / mean_length
 
-    # Normalize: AI text usually has CV 0.1-0.3, human text 0.4-1.0+
-    normalized = min(max((cv - 0.1) / 0.8, 0), 1)
+    # Adjust expected variation based on sentence count
+    if num_sentences < 5:
+        midpoint = 0.18
+        steepness = 10.0
+    else:
+        midpoint = 0.28
+        steepness = 8.0
 
+    normalized = 1 / (1 + math.exp(-steepness * (cv - midpoint)))
     return round(normalized, 4)
 
 
 # ============================================================
-# Feature 3: VOCABULARY RICHNESS (Weight: 20%)
-# Low richness = repetitive vocabulary = likely AI
-# High richness = diverse vocabulary = likely human
+# Feature 3: VOCABULARY RICHNESS (Weight: 10%)
+# Length-robust Type-Token Ratio adjusted by word length.
 # ============================================================
 def vocabulary_richness(text: str) -> float:
     """
-    Calculate vocabulary richness using Type-Token Ratio (TTR).
+    Calculate vocabulary richness using Type-Token Ratio (TTR) and stop-word density.
     Returns a normalized score between 0 and 1.
     Lower score = more likely AI-generated.
     """
     words = word_tokenize(text.lower())
-
-    # Filter out punctuation
     words = [w for w in words if w.isalpha()]
+    N = len(words)
 
-    if len(words) < 5:
+    if N < 5:
         return 0.5  # Not enough words
+
+    # Calculate stop word density (connectives/conversational structure words vs. AI content dense output)
+    from nltk.corpus import stopwords
+    stop_words = set(stopwords.words('english'))
+    stops_in_text = [w for w in words if w in stop_words]
+    stop_fraction = len(stops_in_text) / N
+
+    # Stop words ratio score: human writing typically has >45% stops, AI typically ~30%
+    stop_word_score = (stop_fraction - 0.25) / 0.30
+    stop_word_score = max(0.01, min(0.99, stop_word_score))
 
     # Type-Token Ratio
     unique_words = set(words)
-    ttr = len(unique_words) / len(words)
+    ttr = len(unique_words) / N
 
-    # Also calculate Hapax Legomena ratio (words appearing only once)
-    word_freq = Counter(words)
-    hapax = sum(1 for count in word_freq.values() if count == 1)
-    hapax_ratio = hapax / len(words)
+    # Length-robust normalization midpoint for TTR (which declines logarithmically as length increases)
+    ttr_midpoint = 0.85 - 0.08 * math.log(N / 50.0)
+    ttr_midpoint = max(0.45, min(0.90, ttr_midpoint))
+    ttr_diff = ttr - ttr_midpoint
 
-    # Combined score (weighted average of TTR and Hapax ratio)
-    combined = 0.6 * ttr + 0.4 * hapax_ratio
+    # Sigmoid calibration: higher TTR difference than human baseline = more AI-like = lower score
+    ttr_score = 1.0 - (1 / (1 + math.exp(-12.0 * ttr_diff)))
+    ttr_score = max(0.01, min(0.99, ttr_score))
 
-    # Normalize: AI text usually has TTR 0.3-0.5, human text 0.5-0.8
-    normalized = min(max((combined - 0.2) / 0.6, 0), 1)
+    # Combine both scores: stop word density (60%) and TTR score (40%)
+    vocab_score = 0.60 * stop_word_score + 0.40 * ttr_score
+    vocab_score = max(0.01, min(0.99, vocab_score))
+    return round(vocab_score, 4)
 
-    return round(normalized, 4)
 
 
 # ============================================================
-# Feature 4: REPETITION SCORE (Weight: 20%)
-# High repetition = likely AI
-# Low repetition = likely human
+# Feature 4: REPETITION SCORE (Weight: 10%)
+# Length-robust n-gram repetition detection.
 # ============================================================
 def repetition_score(text: str) -> float:
     """
     Calculate repetition score based on n-gram analysis.
     Returns a normalized score between 0 and 1.
-    Lower score = more likely AI-generated (more repetition found).
+    Lower score = more likely AI-generated.
     """
     words = word_tokenize(text.lower())
     words = [w for w in words if w.isalpha()]
+    N = len(words)
 
-    if len(words) < 10:
+    if N < 10:
         return 0.5  # Not enough words
 
     # Check bigram and trigram repetition
-    bigrams = [tuple(words[i:i+2]) for i in range(len(words)-1)]
-    trigrams = [tuple(words[i:i+3]) for i in range(len(words)-2)]
+    bigrams = [tuple(words[i:i+2]) for i in range(N-1)]
+    trigrams = [tuple(words[i:i+3]) for i in range(N-2)]
 
-    # Count repeated n-grams
     bigram_counts = Counter(bigrams)
     trigram_counts = Counter(trigrams)
 
@@ -168,7 +208,10 @@ def repetition_score(text: str) -> float:
     # Combined repetition score
     repetition_rate = 0.5 * bigram_repetition + 0.5 * trigram_repetition
 
-    # Invert: high repetition = low score (AI-like)
-    normalized = 1 - min(repetition_rate * 3, 1)  # Scale up for sensitivity
+    # Expected repetition midpoint increases logarithmically with N
+    rep_midpoint = 0.02 + 0.05 * math.log(N / 50.0)
+    rep_midpoint = max(0.01, min(0.20, rep_midpoint))
 
+    # Invert: higher repetition = lower score (AI-like)
+    normalized = 1 / (1 + math.exp(25.0 * (repetition_rate - rep_midpoint)))
     return round(normalized, 4)
