@@ -104,12 +104,12 @@ def analyze(request: AnalyzeRequest):
     # Count words
     word_count = len(text.split())
 
-    # Validate: minimum 50 words for meaningful analysis
-    if word_count < 50:
+    # Validate: minimum 20 words for meaningful analysis
+    if word_count < 20:
         raise HTTPException(
             status_code=400,
             detail=f"Text is too short ({word_count} words). "
-                   f"Please provide at least 50 words for accurate analysis. "
+                   f"Please provide at least 20 words for accurate analysis. "
                    f"Recommended: 300-500 words."
         )
 

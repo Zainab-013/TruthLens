@@ -460,12 +460,12 @@ public class TextSelectionActivity extends AppCompatActivity {
             textExtracted.setText(extracted);
             textExtracted.setVisibility(View.VISIBLE);
 
-            if (wordCount >= 50) {
+            if (wordCount >= 20) {
                 textInstruction.setText("Ready to analyze! Selected " + wordCount + " words.");
                 textInstruction.setBackgroundColor(Color.parseColor("#2E7D32")); // Green success
                 btnAnalyze.setVisibility(View.VISIBLE);
             } else {
-                textInstruction.setText("Selected " + wordCount + " words (need at least 50).");
+                textInstruction.setText("Selected " + wordCount + " words (need at least 20).");
                 textInstruction.setBackgroundColor(Color.parseColor("#E94560")); // Red alert
                 btnAnalyze.setVisibility(View.GONE);
             }

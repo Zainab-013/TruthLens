@@ -36,6 +36,12 @@ def calculate_perplexity(text: str) -> float:
     """
     import torch
 
+    # Enforce a uniform start and end state for the BPE tokenizer to align with calibrated baselines
+    if not text.startswith("\n"):
+        text = "\n" + text
+    if not text.endswith("\n"):
+        text = text + "\n"
+
     model, tokenizer = load_model()
 
     # Truncate text to 500 tokens (optimal range for accuracy)

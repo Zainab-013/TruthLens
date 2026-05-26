@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
                     int wordCount = text.isEmpty() ? 0 : text.split("\\s+").length;
                     if (textWordCount != null) {
                         textWordCount.setText(wordCount + " words");
-                        textWordCount.setTextColor(wordCount < 50 ? 0xFFE94560 : 0xFF0FFF50);
+                        textWordCount.setTextColor(wordCount < 20 ? 0xFFE94560 : 0xFF0FFF50);
                     }
                 }
                 @Override
@@ -125,8 +125,8 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 int wordCount = text.split("\\s+").length;
-                if (wordCount < 50) {
-                    Toast.makeText(this, "Need at least 50 words (" + wordCount + " currently)", Toast.LENGTH_LONG).show();
+                if (wordCount < 20) {
+                    Toast.makeText(this, "Need at least 20 words (" + wordCount + " currently)", Toast.LENGTH_LONG).show();
                     return;
                 }
                 analyzeText(text);

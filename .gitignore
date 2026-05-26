@@ -1,26 +1,65 @@
 # ============================================
-# TruthLens - .gitignore
+# TruthLens - Comprehensive .gitignore
 # ============================================
 
-# -------------------- Python --------------------
-Important Documents
+# -------------------- User Custon Ignores --------------------
+Important Documents/
 PROJECT_DOCUMENTATION.md
+
+# -------------------- Python --------------------
+# Virtual Environments
 venv/
 env/
 .venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*$py.class
 *.pyd
-*.egg-info/
-dist/
+
+# Distribution / packaging
+bin/
 build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
 *.egg
+MANIFEST
+
+# Testing, coverage, and analysis
+.tox/
+.nosexy/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.hypothesis/
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
 
 # -------------------- Java / Spring Boot --------------------
 target/
+!.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
 *.class
 *.jar
 *.war
@@ -32,18 +71,18 @@ mvnw.cmd
 
 # -------------------- Android --------------------
 .gradle/
-build/
 local.properties
 *.apk
-*.aab
 *.ap_
+*.aab
 *.dex
 captures/
 .externalNativeBuild/
 .cxx/
+output.json
 
-# -------------------- IDE --------------------
-# IntelliJ / Android Studio
+# -------------------- IDEs --------------------
+# JetBrains / Android Studio / PyCharm
 .idea/
 *.iml
 *.iws
@@ -53,44 +92,51 @@ out/
 # VS Code
 .vscode/
 *.code-workspace
+.history/
 
 # Eclipse
 .classpath
 .project
 .settings/
+.factorypath
 
-# -------------------- OS --------------------
+# -------------------- OS & Editor Artifacts --------------------
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 Desktop.ini
 *.swp
 *.swo
 *~
+*.bak
+*.tmp
+*.orig
 
-# -------------------- Models / Large Files --------------------
-# GPT-2 cached model files (downloaded at runtime)
+# -------------------- Models & Large Files --------------------
+# GPT-2 / Hugging Face cached model files
 *.bin
 *.safetensors
 *.h5
 *.pt
 *.pth
-
-# Hugging Face cache
 .cache/
+huggingface/
 
-# -------------------- Environment --------------------
+# -------------------- Environment & Secrets --------------------
 .env
 .env.local
-.env.production
+.env.development.local
+.env.test.local
+.env.production.local
 *.env
 
-# -------------------- Logs --------------------
-logs/
-*.log
-npm-debug.log*
-
-# -------------------- Misc --------------------
+# -------------------- Web / Node (if applicable) --------------------
 node_modules/
-*.tmp
-*.bak
-*.orig
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*

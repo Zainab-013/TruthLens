@@ -6,11 +6,9 @@ Flow:
     main.py → analyzer.py → features.py + explanation.py
                                 ↓
                           model_utils.py
-
-Final Score Formula:
-    0.4 x Perplexity + 0.2 x Burstiness + 0.2 x Vocabulary + 0.2 x Repetition
 """
 
+import re
 from features import (
     calculate_perplexity,
     calculate_burstiness,
@@ -18,6 +16,20 @@ from features import (
     repetition_score
 )
 from explanation import generate_explanation, get_verdict
+
+
+def clean_text(text: str) -> str:
+    """
+    Cleans OCR-extracted text by removing noise characters, typical layout lines,
+    and normalizing whitespace.
+    """
+    if not text:
+        return ""
+    # Remove vertical bars, bullets, brackets, tildes, stars, backslashes, braces
+    text = re.sub(r'[\|•\[\]_~*\\/{}#]', '', text)
+    # Collapse multiple whitespaces and linebreaks into a single space
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
 
 
 def analyze_text(text: str) -> dict:
@@ -30,18 +42,49 @@ def analyze_text(text: str) -> dict:
     Returns:
         dict with AI%, Human%, individual scores, verdict, and explanations.
     """
-    # Step 1: Calculate all features
-    perplexity = calculate_perplexity(text)
-    burstiness = calculate_burstiness(text)
-    vocabulary = vocabulary_richness(text)
-    repetition = repetition_score(text)
+    # Step 0: Clean the text to remove OCR noise and layout artifacts
+    cleaned_text = clean_text(text)
 
-    # Step 2: Weighted final score (0 = AI, 1 = Human)
-    final_score = (
-        0.55 * perplexity +
-        0.25 * vocabulary +
-        0.20 * burstiness
-    )
+    # If cleaning resulted in an empty string, fallback to original to prevent crashes
+    if not cleaned_text:
+        cleaned_text = text
+
+    # Step 1: Calculate all features using cleaned text
+    perplexity = calculate_perplexity(cleaned_text)
+    burstiness = calculate_burstiness(cleaned_text)
+    vocabulary = vocabulary_richness(cleaned_text)
+    repetition = repetition_score(cleaned_text)
+
+    # Step 2: Dynamic weighting ensemble based on text length and perplexity confidence
+    # Count words to adjust weights for short inputs
+    words_list = [w for w in re.findall(r'\b\w+\b', cleaned_text)]
+    num_words = len(words_list)
+
+    if num_words < 80:
+        # For short texts, stylistic features (burstiness, vocabulary richness) are
+        # statistically noisy. We rely almost entirely (90%) on perplexity.
+        final_score = (
+            0.90 * perplexity +
+            0.05 * vocabulary +
+            0.05 * burstiness
+        )
+    else:
+        # For longer texts, we can use stylistic features more safely.
+        # If perplexity indicates high confidence (either clearly AI or clearly Human),
+        # we heavily weigh perplexity to avoid stylistic diluting.
+        if perplexity < 0.25 or perplexity > 0.75:
+            final_score = (
+                0.85 * perplexity +
+                0.08 * vocabulary +
+                0.07 * burstiness
+            )
+        else:
+            # Standard balanced weights for borderline cases
+            final_score = (
+                0.55 * perplexity +
+                0.25 * vocabulary +
+                0.20 * burstiness
+            )
 
     # Step 3: Apply calibration scaling to push clear decisions closer to 0% and 100%
     if final_score < 0.35:
@@ -81,3 +124,4 @@ def analyze_text(text: str) -> dict:
         "scores": scores,
         "explanation": explanations
     }
+
