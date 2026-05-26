@@ -14,7 +14,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitClient {
 
     // Default URL to fallback on if none is set
-    private static final String DEFAULT_URL = "http://172.20.21.30:8080/";
+    private static final String DEFAULT_URL = "https://truthlens-backend-0rlr.onrender.com/";
     private static String baseUrl = DEFAULT_URL;
 
     private static Retrofit retrofit = null;

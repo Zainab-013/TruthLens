@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Load stored server URL from SharedPreferences
         SharedPreferences prefs = getSharedPreferences("TruthLensPrefs", MODE_PRIVATE);
-        String savedUrl = prefs.getString("backend_url", "http://172.20.21.30:8080/");
+        String savedUrl = prefs.getString("backend_url", "https://truthlens-backend-0rlr.onrender.com/");
         RetrofitClient.updateBaseUrl(savedUrl);
 
         // Initialize views safely

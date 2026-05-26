@@ -196,7 +196,7 @@
                 android:id="@+id/textCurrentServer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Current: http://172.20.21.30:8080/"
+                android:text="Current: https://truthlens-backend-0rlr.onrender.com/"
                 android:textSize="13sp"
                 android:textColor="#8899AA"
                 android:layout_marginTop="4dp" />

@@ -17,7 +17,8 @@ WORKDIR /app
 # Copy dependency list
 COPY requirements.txt .
 
-# Install dependencies
+# Install dependencies (CPU-only PyTorch to keep container size under 1GB)
+RUN pip install --no-cache-dir torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application
