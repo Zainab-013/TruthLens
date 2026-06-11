@@ -64,7 +64,7 @@ public class ContentActivity extends AppCompatActivity {
                     .append("Thank you for using TruthLens. If you encounter any technical issues, have questions about analysis metrics, or would like to share feedback, we are here to help.\n\n")
                     .append("1. Contact Information\n")
                     .append("• Email Support: shaikhyasmeen78600@gmail.com\n")
-                    .append("• Website: https://shaikhyasmeen78600.github.io/TruthLens\n")
+                    .append("• Website: https://truthlens-z.netlify.app\n")
                     .append("• Development Team: Shaikh Zainab Sattar\n\n")
                     .append("2. Common Issues & Troubleshooting\n")
                     .append("• Network Errors: If you receive a connection failure warning, make sure your mobile device is connected to the same local WiFi network as the API gateway server (configured in your client settings).\n")
