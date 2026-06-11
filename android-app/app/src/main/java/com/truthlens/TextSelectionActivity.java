@@ -252,15 +252,45 @@ public class TextSelectionActivity extends AppCompatActivity {
                 .addOnSuccessListener(text -> {
                     progressBar.setVisibility(View.GONE);
                     detectedWords.clear();
+
+                    // Collect all lines across all text blocks
+                    List<Text.Line> allLines = new ArrayList<>();
                     for (Text.TextBlock block : text.getTextBlocks()) {
                         for (Text.Line line : block.getLines()) {
-                            for (Text.Element element : line.getElements()) {
-                                if (element.getBoundingBox() != null) {
-                                    detectedWords.add(element);
-                                }
+                            if (line.getBoundingBox() != null) {
+                                allLines.add(line);
                             }
                         }
                     }
+
+                    // Sort the lines in visual reading order (top-to-bottom, left-to-right)
+                    java.util.Collections.sort(allLines, (l1, l2) -> {
+                        Rect r1 = l1.getBoundingBox();
+                        Rect r2 = l2.getBoundingBox();
+                        if (r1 == null || r2 == null) return 0;
+
+                        // Check if the lines overlap vertically
+                        // We use a threshold of 50% of the minimum line height to determine if they are on the same line
+                        int minHeight = Math.min(r1.height(), r2.height());
+                        int yThreshold = minHeight / 2;
+
+                        boolean sameLine = Math.abs(r1.centerY() - r2.centerY()) < yThreshold;
+                        if (sameLine) {
+                            return Integer.compare(r1.left, r2.left);
+                        } else {
+                            return Integer.compare(r1.top, r2.top);
+                        }
+                    });
+
+                    // Add elements (words) from the sorted lines to detectedWords in correct order
+                    for (Text.Line line : allLines) {
+                        for (Text.Element element : line.getElements()) {
+                            if (element.getBoundingBox() != null) {
+                                detectedWords.add(element);
+                            }
+                        }
+                    }
+
                     ocrComplete = true;
                     textInstruction.setText("Drag handles or tap on words to select text");
                     drawSelection(); // Redraw with detectable word outlines

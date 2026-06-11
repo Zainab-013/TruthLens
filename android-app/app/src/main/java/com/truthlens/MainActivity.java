@@ -64,7 +64,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         // Initialize views safely
         editTextInput = findViewById(R.id.editTextInput);
         textWordCount = findViewById(R.id.textWordCount);
@@ -80,7 +79,9 @@ public class MainActivity extends AppCompatActivity {
         if (editTextInput != null) {
             editTextInput.addTextChangedListener(new TextWatcher() {
                 @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
+
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     String text = s.toString().trim();
@@ -90,8 +91,10 @@ public class MainActivity extends AppCompatActivity {
                         textWordCount.setTextColor(wordCount < 20 ? 0xFFE94560 : 0xFF0FFF50);
                     }
                 }
+
                 @Override
-                public void afterTextChanged(Editable s) {}
+                public void afterTextChanged(Editable s) {
+                }
             });
         }
 
@@ -110,7 +113,8 @@ public class MainActivity extends AppCompatActivity {
                 }
                 int wordCount = text.split("\\s+").length;
                 if (wordCount < 20) {
-                    Toast.makeText(this, "Need at least 20 words (" + wordCount + " currently)", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Need at least 20 words (" + wordCount + " currently)", Toast.LENGTH_LONG)
+                            .show();
                     return;
                 }
                 analyzeText(text);
@@ -134,6 +138,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             });
         }
+
     }
 
     @Override
@@ -144,11 +149,15 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateOverlayButtons() {
         if (FloatingButtonService.isRunning) {
-            if (btnActivateOverlay != null) btnActivateOverlay.setVisibility(View.GONE);
-            if (btnDeactivateOverlay != null) btnDeactivateOverlay.setVisibility(View.VISIBLE);
+            if (btnActivateOverlay != null)
+                btnActivateOverlay.setVisibility(View.GONE);
+            if (btnDeactivateOverlay != null)
+                btnDeactivateOverlay.setVisibility(View.VISIBLE);
         } else {
-            if (btnActivateOverlay != null) btnActivateOverlay.setVisibility(View.VISIBLE);
-            if (btnDeactivateOverlay != null) btnDeactivateOverlay.setVisibility(View.GONE);
+            if (btnActivateOverlay != null)
+                btnActivateOverlay.setVisibility(View.VISIBLE);
+            if (btnDeactivateOverlay != null)
+                btnDeactivateOverlay.setVisibility(View.GONE);
         }
     }
 
@@ -217,11 +226,14 @@ public class MainActivity extends AppCompatActivity {
         try {
             Intent serviceIntent = new Intent(this, FloatingButtonService.class);
             stopService(serviceIntent);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         isOverlayActive = false;
-        if (btnActivateOverlay != null) btnActivateOverlay.setVisibility(View.VISIBLE);
-        if (btnDeactivateOverlay != null) btnDeactivateOverlay.setVisibility(View.GONE);
+        if (btnActivateOverlay != null)
+            btnActivateOverlay.setVisibility(View.VISIBLE);
+        if (btnDeactivateOverlay != null)
+            btnDeactivateOverlay.setVisibility(View.GONE);
         Toast.makeText(this, "Overlay deactivated", Toast.LENGTH_SHORT).show();
     }
 
@@ -248,18 +260,16 @@ public class MainActivity extends AppCompatActivity {
                 showLoading(false);
                 if (response.isSuccessful() && response.body() != null) {
                     AnalyzeResponse result = response.body();
-                    
+
                     // Save to local cache history
-                    HistoryManager.saveHistoryItem(MainActivity.this, 
-                        new HistoryItem(
-                            text, 
-                            result.getAi_percentage(), 
-                            result.getHuman_percentage(), 
-                            result.getVerdict(), 
-                            result.getExplanation()
-                        )
-                    );
-                    
+                    HistoryManager.saveHistoryItem(MainActivity.this,
+                            new HistoryItem(
+                                    text,
+                                    result.getAi_percentage(),
+                                    result.getHuman_percentage(),
+                                    result.getVerdict(),
+                                    result.getExplanation()));
+
                     Intent intent = new Intent(MainActivity.this, ResultActivity.class);
                     intent.putExtra("ai_percentage", result.getAi_percentage());
                     intent.putExtra("human_percentage", result.getHuman_percentage());
@@ -281,10 +291,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showLoading(boolean show) {
-        if (progressBar != null) progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
-        if (textLoading != null) textLoading.setVisibility(show ? View.VISIBLE : View.GONE);
-        if (btnAnalyze != null) btnAnalyze.setEnabled(!show);
+        if (progressBar != null)
+            progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+        if (textLoading != null)
+            textLoading.setVisibility(show ? View.VISIBLE : View.GONE);
+        if (btnAnalyze != null)
+            btnAnalyze.setEnabled(!show);
     }
-
 
 }
