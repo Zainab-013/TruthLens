@@ -25,15 +25,22 @@ def load_model():
                 print("[LOADING] GPT-2 model (first time only)...")
                 import torch
                 import gc
+                import os
                 
                 # Restrict PyTorch thread count to prevent CPU thread thrashing under concurrent requests
                 torch.set_num_threads(1)
                 
                 from transformers import GPT2LMHeadModel, GPT2TokenizerFast
 
-                _tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+                # Check for pre-saved bfloat16 weights to bypass runtime memory conversion overhead
+                model_path = "/app/optimized_model" if os.path.exists("/app/optimized_model") else (
+                    "./optimized_model" if os.path.exists("./optimized_model") else "gpt2"
+                )
+                print(f"[PATH] Loading model weights from: {model_path}")
+
+                _tokenizer = GPT2TokenizerFast.from_pretrained(model_path)
                 _model = GPT2LMHeadModel.from_pretrained(
-                    "gpt2",
+                    model_path,
                     torch_dtype=torch.bfloat16,
                     low_cpu_mem_usage=True
                 )
@@ -41,8 +48,9 @@ def load_model():
                 
                 # Clean up memory allocated during loading process
                 gc.collect()
-                print("[OK] GPT-2 model loaded successfully in bfloat16!")
+                print(f"[OK] GPT-2 model loaded successfully from {model_path}!")
 
     return _model, _tokenizer
+
 
 

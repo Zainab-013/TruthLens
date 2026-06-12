@@ -21,8 +21,12 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Pre-compile/optimize and save GPT-2 in bfloat16 to avoid runtime RAM spikes during load
+RUN python -c "from transformers import GPT2LMHeadModel, GPT2TokenizerFast; import torch; m = GPT2LMHeadModel.from_pretrained('gpt2'); m.to(torch.bfloat16).save_pretrained('/app/optimized_model'); t = GPT2TokenizerFast.from_pretrained('gpt2'); t.save_pretrained('/app/optimized_model')"
+
 # Copy the rest of the application
 COPY . .
+
 
 # Expose port
 EXPOSE 5000
